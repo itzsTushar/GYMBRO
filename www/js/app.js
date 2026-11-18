@@ -151,21 +151,15 @@ bindReminder() {
 
       Storage.saveSettings(settings);
 
-      Alarm.unlock();
-
       this.updateReminderUI();
 
-      if (
-        settings.reminderEnabled &&
-        "Notification" in window &&
-        Notification.permission === "default"
-      ) {
-        await Notification.requestPermission();
+      try {
+        await Alarm.schedule(settings);
+        showToast("Reminder saved. Android notification scheduled.");
+      } catch (error) {
+        console.error(error);
+        showToast("Reminder saved, but Android notification permission/setup needs attention.");
       }
-
-      Alarm.check();
-
-      showToast("Reminder settings saved.");
     });
 },
 
@@ -357,97 +351,62 @@ bindReminder() {
   },
 
 
-  renderHistory() {
-
-    const days =
-      this.getLast30Days(Storage.getDaily()).reverse();
-
-    const holder =
-      document.getElementById("historyList");
-
-    holder.innerHTML = "";
-
-    days.forEach(item => {
-
-      const row = document.createElement("div");
-
-      row.className = "history-row";
-
-      const dateText = item.date.toLocaleDateString(
-        "en-IN",
-        {
-          weekday: "short",
-          day: "numeric",
-          month: "short"
-        }
-      );
-
-      let label = "Rest day";
-
-      let cls = "status-rest";
-
-      let detail = "Sunday";
-
-      if (item.completed) {
-
-        label = "Completed";
-
-        cls = "status-complete";
-
-        detail = item.record?.summary || "Workout completed";
-
-      } else if (item.status === "missed") {
-
-        label = "Missed";
-
-        cls = "status-missed";
-
-        detail = "No workout recorded";
-
-      } else if (item.status === "optional") {
-
-        label = "Optional";
-
-        cls = "status-rest";
-
-        detail = "Saturday – no streak impact";
-
-      } else if (item.status === "future") {
-
-        label = "Upcoming";
-
-        cls = "status-rest";
-
-        detail = "Not yet recorded";
-
-      } else if (item.status === "today") {
-
-        label = "Today";
-
-        cls = "status-rest";
-
-        detail = "Workout not completed yet";
-
+  getLast7Days(daily) {
+    const result = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const key = Streak.dateKey(date);
+      const record = daily[key] || null;
+      const defaultType = date.getDay() === 0 ? "rest" : date.getDay() === 6 ? "optional" : "work";
+      const dayType = record?.dayType || defaultType;
+      const completed = Boolean(record?.completed);
+      let status = completed ? "completed" : dayType;
+      if (!completed && dayType === "work" && key !== Streak.dateKey(today)) {
+        status = record?.items?.length ? "in-progress" : "missed";
       }
-
-      row.innerHTML = `
-
-        <span class="history-date">${dateText}</span>
-
-        <span class="history-detail">${detail}</span>
-
-        <span class="status-pill ${cls}">
-          ${label}
-        </span>
-
-      `;
-
-      holder.appendChild(row);
-
-    });
-
+      if (!completed && key === Streak.dateKey(today) && dayType === "work") status = "today";
+      result.push({ date, key, record, completed, dayType, status });
+    }
+    return result;
   },
 
+  renderHistory() {
+    const days = this.getLast7Days(Storage.getDaily()).reverse();
+    const holder = document.getElementById("historyList");
+    holder.innerHTML = "";
+    days.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "history-row";
+      const dateText = item.date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+      let label = "Working day";
+      let cls = "status-rest";
+      let detail = "No exercises recorded";
+      const exercises = item.record?.items || [];
+      if (item.completed) {
+        label = "Completed"; cls = "status-complete";
+        detail = exercises.length ? exercises.map(x => `${x.name} (${(x.completedSets || []).filter(Boolean).length}/${x.sets} sets)`).join(" · ") : (item.record?.summary || "Workout completed");
+      } else if (item.status === "missed") {
+        label = "Missed"; cls = "status-missed"; detail = "Working day – no workout recorded";
+      } else if (item.status === "in-progress") {
+        label = "In progress"; cls = "status-rest";
+        detail = exercises.map(x => `${x.name} (${(x.completedSets || []).filter(Boolean).length}/${x.sets} sets)`).join(" · ");
+      } else if (item.status === "optional") {
+        label = "Optional day"; cls = "status-rest"; detail = exercises.length ? exercises.map(x => x.name).join(" · ") : "Optional workout – skipped";
+      } else if (item.status === "rest") {
+        label = "Rest day"; cls = "status-rest"; detail = "Scheduled recovery day";
+      } else if (item.status === "today") {
+        label = "Today"; cls = "status-rest"; detail = exercises.length ? exercises.map(x => x.name).join(" · ") : "Workout not completed yet";
+      }
+      const safeDetail = String(detail).replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      })[character]);
+      row.innerHTML = `<span class="history-date">${dateText}</span><span class="history-detail">${safeDetail}</span><span class="status-pill ${cls}">${label}</span>`;
+      holder.appendChild(row);
+    });
+  },
 
   updateReminderUI() {
 

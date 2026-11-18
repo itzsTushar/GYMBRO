@@ -15,49 +15,61 @@ const ExerciseLibrary = {
   // DEFAULT EXERCISE CATEGORIES
   // ----------------------------------
 
+  getBodyPartExercises() {
+    const presets = {"chest": [["Bench Press", 40, 10, 3], ["Incline Dumbbell Press", 15, 12, 3], ["Chest Fly", 10, 12, 3], ["Push-ups", 0, 15, 3], ["Decline Press", 30, 10, 3], ["Cable Crossover", 10, 12, 3]], "biceps": [["Barbell Curl", 15, 12, 3], ["Dumbbell Curl", 8, 12, 3], ["Hammer Curl", 8, 12, 3], ["Preacher Curl", 12, 10, 3], ["Concentration Curl", 7, 12, 3], ["Cable Curl", 10, 12, 3]], "triceps": [["Triceps Pushdown", 15, 12, 3], ["Overhead Extension", 10, 12, 3], ["Skull Crushers", 12, 10, 3], ["Close-Grip Push-ups", 0, 12, 3], ["Bench Dips", 0, 12, 3], ["Diamond Push-ups", 0, 10, 3]], "back": [["Lat Pulldown", 30, 12, 3], ["Seated Cable Row", 25, 12, 3], ["Bent-Over Row", 20, 10, 3], ["Deadlift", 40, 8, 3], ["Single-Arm Dumbbell Row", 12, 12, 3], ["Back Extension", 0, 15, 3]], "shoulders": [["Shoulder Press", 15, 10, 3], ["Lateral Raise", 5, 12, 3], ["Front Raise", 5, 12, 3], ["Reverse Fly", 7, 12, 3], ["Arnold Press", 10, 10, 3], ["Upright Row", 12, 12, 3]], "legs": [["Squats", 30, 12, 3], ["Leg Press", 60, 12, 3], ["Lunges", 0, 12, 3], ["Leg Extension", 25, 12, 3], ["Leg Curl", 20, 12, 3], ["Calf Raises", 20, 15, 3]], "abs": [["Crunches", 0, 20, 3], ["Plank", 0, 1, 3], ["Leg Raises", 0, 15, 3], ["Russian Twists", 0, 20, 3], ["Bicycle Crunches", 0, 20, 3], ["Mountain Climbers", 0, 20, 3]]};
+    return Object.entries(presets).reduce((all, [categoryId, items]) => {
+      all[categoryId] = items.map((item, index) => ({
+        id: `default_${categoryId}_${index + 1}`,
+        name: item[0], weight: item[1], reps: item[2], sets: item[3],
+        duration: 0, distance: 0, notes: "Default exercise"
+      }));
+      return all;
+    }, {});
+  },
+
   getDefaults() {
     return [
       {
         id: "chest",
         name: "Chest",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["chest"]
       },
       {
         id: "biceps",
         name: "Biceps",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["biceps"]
       },
       {
         id: "triceps",
         name: "Triceps",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["triceps"]
       },
       {
         id: "back",
         name: "Back",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["back"]
       },
       {
         id: "shoulders",
         name: "Shoulders",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["shoulders"]
       },
       {
         id: "legs",
         name: "Legs",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["legs"]
       },
       {
         id: "abs",
         name: "Abs",
         type: "strength",
-        exercises: []
+        exercises: this.getBodyPartExercises()["abs"]
       },
       {
         id: "basic",
@@ -134,6 +146,20 @@ const ExerciseLibrary = {
       this.save();
     } else {
       this.categories = saved;
+      const presets = this.getBodyPartExercises();
+      this.categories.forEach(category => {
+        if (presets[category.id]) {
+          if (!Array.isArray(category.exercises)) category.exercises = [];
+          const existingIds = new Set(category.exercises.map(exercise => exercise.id));
+          const existingNames = new Set(category.exercises.map(exercise => String(exercise.name).toLowerCase()));
+          presets[category.id].forEach(exercise => {
+            if (!existingIds.has(exercise.id) && !existingNames.has(exercise.name.toLowerCase())) {
+              category.exercises.push(exercise);
+            }
+          });
+        }
+      });
+      this.save();
     }
 
   },

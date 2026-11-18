@@ -176,6 +176,26 @@
     </div>
   </div>
 
+  <section class="panel weekly-planner-panel">
+    <div class="panel-heading">
+      <div><p class="eyebrow">YOUR WEEK</p><h2>Next 7 days</h2></div>
+      <span class="soft-badge">Weekly plan</span>
+    </div>
+    <div class="week-planner" id="weekPlanner"></div>
+    <div class="selected-day-heading">
+      <div><p class="eyebrow">SELECTED DAY</p><h2 id="selectedWorkoutDate">Today</h2></div>
+      <div class="form-group day-type-control">
+        <label for="workoutDayType">Day type</label>
+        <select id="workoutDayType">
+          <option value="work">Working day</option>
+          <option value="optional">Optional day</option>
+          <option value="rest">Rest day</option>
+        </select>
+      </div>
+    </div>
+    <p class="small-note" id="workoutPlanHint">Track each set as you complete it.</p>
+  </section>
+
   <!-- ADD EXERCISE -->
 
   <section class="workout-builder">
@@ -271,7 +291,7 @@
   </section>
 
         <section class="page-view" id="page-history">
-          <div class="section-header"><div><p class="eyebrow">YOUR LAST 30 DAYS</p><h1>Workout history</h1><p class="subheading">A rolling view of completed workouts and missed mandatory days.</p></div><button class="danger-outline" id="resetHistory">Reset workout history</button></div>
+          <div class="section-header"><div><p class="eyebrow">YOUR LAST 7 DAYS</p><h1>Workout history</h1><p class="subheading">Your exercises, completed sets, missed working days, optional days and planned rest days.</p></div><button class="danger-outline" id="resetHistory">Reset workout history</button></div>
           <section class="panel history-panel"><div class="history-list" id="historyList"></div></section>
         </section>
 
@@ -320,7 +340,7 @@
     </button>
 
     <p class="small-note" id="reminderMessage">
-      Keep GYMBRO open in your browser for the alarm to work.
+      Android will show a notification at the scheduled time, even when GYMBRO is closed. Allow notification and exact-alarm permissions when prompted.
     </p>
 
   </section>
@@ -332,7 +352,7 @@
           <div class="section-header"><div><p class="eyebrow">PREFERENCES</p><h1>Settings</h1><p class="subheading">Your GYMBRO preferences.</p></div></div>
           <section class="panel settings-panel">
             <div class="setting-row"><div><h3>Streak rules</h3><p>Monday–Friday mandatory. Saturday optional. Sunday rest day.</p></div><span class="soft-badge">Active</span></div>
-            <div class="setting-row"><div><h3>Data storage</h3><p>Your data is saved locally in this browser using LocalStorage.</p></div><span class="soft-badge">Local</span></div>
+            <div class="setting-row"><div><h3>Data storage</h3><p>Your workouts, plans, exercises and settings are stored locally on this device.</p></div><span class="soft-badge">Local</span></div>
             <div class="setting-row"><div><h3>Reset policy</h3><p>Resetting history will preserve your exercise library and preferences.</p></div><span class="soft-badge">History only</span></div>
           </section>
         </section>
@@ -515,6 +535,7 @@
 </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/native-plugins.bundle.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/streak.js"></script>
   <script src="js/calendar.js"></script>

@@ -5,7 +5,8 @@ const GYMBRO_KEYS = {
   history: "gymbro_history",
   streaks: "gymbro_streaks",
   settings: "gymbro_settings",
-  version: "gymbro_version"
+  version: "gymbro_version",
+  planner: "gymbro_planner"
 };
 
 const Storage = {
@@ -44,7 +45,9 @@ const Storage = {
 };
 
 (function initializeStorage() {
-  if (!localStorage.getItem(GYMBRO_KEYS.version)) {
-    localStorage.setItem(GYMBRO_KEYS.version, JSON.stringify(1));
+  const currentVersion = Number(Storage.get(GYMBRO_KEYS.version, 0)) || 0;
+  if (currentVersion < 2) {
+    // Additive version marker only. Existing workout/library/settings keys are untouched.
+    localStorage.setItem(GYMBRO_KEYS.version, JSON.stringify(2));
   }
 })();
